@@ -42,6 +42,11 @@ export function getDemoRole(): DemoRole {
         return "user"
     }
 
+    // If VITE_DEMO_ADMIN_FOR_ALL is set, everyone is admin by default
+    if (import.meta.env.VITE_DEMO_ADMIN_FOR_ALL === "true") {
+        return "admin"
+    }
+
     const stored = window.localStorage.getItem(DEMO_ROLE_KEY)
     return stored === "admin" ? "admin" : "user"
 }

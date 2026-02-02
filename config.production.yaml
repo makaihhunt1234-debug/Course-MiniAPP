@@ -1,0 +1,135 @@
+app:
+  name: Course MiniApp Demo
+  description: Telegram MiniApp course platform demo
+  defaultCurrency: USD
+
+env:
+  port: 3001
+  nodeEnv: production
+  demoMode: true
+  defaultLanguage: en
+  frontendUrl: https://democourse.cookiewhite.beer
+  redis:
+    enabled: false
+    host: localhost
+    port: 6379
+    password: ""
+  telegram:
+    botToken: ""
+    webhookUrl: ""
+    adminIds: []
+  paypal:
+    clientId: ""
+    secret: ""
+    webhookId: ""
+    mode: sandbox
+  cloudflare:
+    accountId: ""
+    apiToken: ""
+    signingKey: ""
+    customerSubdomain: ""
+  video:
+    signingKey: "demo-signing-key-32-characters!!"
+
+features:
+  demoMode: true
+  telegramAuth: false
+  supportChat: true
+
+payments:
+  paypal:
+    enabled: false
+    currency: USD
+  telegramStars:
+    enabled: false
+
+demo:
+  avatarUrl: https://i.imgur.com/zOlPMhT.png
+  userNamePrefix: Demo
+  support:
+    seedMessage: "Hi! This is a demo support chat."
+    seedReply: "Hello! How can I help you today?"
+
+ui:
+  homeHero:
+    imageUrl: https://i.imgur.com/zOlPMhT.png
+    wave:
+      colors:
+        - "#e8320e"
+        - "#e88d0e"
+        - "#e8320e"
+        - "#120012"
+        - "#07004f"
+        - "#1200d9"
+        - "#120012"
+        - "#120012"
+      fps: 30
+      seed: 0
+      speed: 1.1
+
+authors:
+  - id: demo
+    name: Demo Instructor
+    avatarUrl: https://i.imgur.com/zOlPMhT.png
+
+courses:
+  - id: 1
+    title: Demo Course 1
+    authorId: demo
+    description: Demo course showcasing platform features
+    category: Demo
+    imageUrl: https://i.imgur.com/zOlPMhT.png
+    duration: 6h 30m
+    program:
+      - "<ico:video> Getting started"
+      - "<ico:read> Core concepts"
+      - "<ico:practice> Hands-on practice"
+      - "<ico:project> Final project"
+    price: 9.99
+    starsPrice: 100
+    currency: USD
+    visibility: public
+  - id: 2
+    title: Demo Course 2
+    authorId: demo
+    description: Demo course showcasing platform features
+    category: Demo
+    imageUrl: https://i.imgur.com/zOlPMhT.png
+    duration: 4h 10m
+    price: 9.99
+    starsPrice: 100
+    currency: USD
+    visibility: public
+  - id: 3
+    title: Demo Course 3
+    authorId: demo
+    description: Demo course showcasing platform features
+    category: Demo
+    imageUrl: https://i.imgur.com/zOlPMhT.png
+    duration: 5h 45m
+    price: 9.99
+    starsPrice: 100
+    currency: USD
+    visibility: public
+  - id: 4
+    title: Demo Course 4
+    authorId: demo
+    description: Demo course showcasing platform features
+    category: Demo
+    imageUrl: https://i.imgur.com/zOlPMhT.png
+    duration: 3h 25m
+    price: 60
+    starsPrice: 100
+    currency: USD
+    visibility: public
+  - id: 5
+    title: Demo Course 5
+    authorId: demo
+    description: Demo course showcasing platform features
+    category: Demo
+    imageUrl: https://i.imgur.com/zOlPMhT.png
+    duration: 2h 50m
+    price: 9.99
+    starsPrice: 100
+    currency: USD
+    visibility: public
