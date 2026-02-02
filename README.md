@@ -2,6 +2,10 @@
 
 Telegram MiniApp platform for selling and delivering online courses. Features PayPal and Telegram Stars payments, Cloudflare Stream video support, and a fully customizable admin dashboard.
 
+## Live Demo
+
+**[https://democourse.cookiewhite.beer](https://democourse.cookiewhite.beer)** — Try the full platform in demo mode
+
 ## Features
 
 - **Telegram MiniApp** - Native integration with Telegram WebApp API
