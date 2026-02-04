@@ -17,6 +17,7 @@ env:
     botToken: ""
     webhookUrl: ""
     adminIds: []
+    initDataTtl: 300
   paypal:
     clientId: ""
     secret: ""

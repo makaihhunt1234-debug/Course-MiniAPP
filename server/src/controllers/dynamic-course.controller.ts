@@ -7,6 +7,7 @@ import {
     loadLessonRemedialContent
 } from '../services/filesystem-loader.js'
 import { query } from '../config/database.js'
+import { formatCurrency } from '../utils/currency.js'
 
 /**
  * GET /api/dynamic/courses/:id/lessons
@@ -264,6 +265,9 @@ export async function getDynamicCourse(
         }
 
         const metadata = await loadCourseMetadata(courseId)
+        if (!metadata) {
+            throw createError('Course not found', 404)
+        }
         const lessons = await loadCourseFromFilesystem(courseId)
 
         res.json({
@@ -273,8 +277,8 @@ export async function getDynamicCourse(
                 ...metadata,
                 lessonsCount: lessons.length,
                 rating: 5.0,
-                price: '$0.00',
-                starsPrice: metadata?.starsPrice
+                price: formatCurrency(metadata.price, metadata.currency),
+                starsPrice: metadata.starsPrice
             }
         })
     } catch (error) {

@@ -8,7 +8,7 @@ import { CloudflareStreamPlayer } from '@/components/feature/CloudflareStreamPla
  * with React CloudflareStreamPlayer components
  *
  * Usage:
- * const contentRef = useCloudflareStream(htmlContent)
+ * const contentRef = useCloudflareStream(htmlContent, courseId)
  * <div ref={contentRef} dangerouslySetInnerHTML={{ __html: htmlContent }} />
  */
 export function useCloudflareStream(htmlContent: string, courseId: number) {

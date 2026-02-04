@@ -3,19 +3,17 @@ import { query } from '../config/database.js'
 import { cache, CACHE_KEYS } from '../config/redis.js'
 import { createError } from '../middleware/error.middleware.js'
 import { loadCourseMetadata, loadCourseFromFilesystem } from '../services/filesystem-loader.js'
+import { loadAppConfig } from '../config/app-config.js'
 import type {
     Transaction,
     UserCourseResponse,
     TransactionResponse
 } from '../types/models.js'
-
-function formatPrice(amount: number, isNegative = true): string {
-    const formatted = `$${Math.abs(amount).toFixed(2)}`
-    return isNegative ? `-${formatted}` : formatted
-}
+import { formatCurrency, formatSignedCurrency, normalizeCurrency } from '../utils/currency.js'
+import { getLocale } from '../utils/locale.js'
 
 function formatDate(date: Date): string {
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat(getLocale(), {
         month: 'short',
         day: 'numeric',
         year: 'numeric'
@@ -114,6 +112,7 @@ export async function getUserCourses(
             title: string
             author: string
             price: number
+            currency: string
             rating: number
             category: string
             image_url: string
@@ -149,7 +148,8 @@ export async function getUserCourses(
                 id: courseId,
                 title: meta.title,
                 author: meta.author,
-                price: meta.price || 8.00,
+                price: meta.price,
+                currency: meta.currency,
                 rating: Math.round(avgRating * 10) / 10,
                 category: meta.category || 'General',
                 image_url: meta.imageUrl || 'https://i.imgur.com/zOlPMhT.png',
@@ -164,7 +164,7 @@ export async function getUserCourses(
         // Get progress for each course
         const courseIds = courses.map(c => c.id)
 
-        let progressMap: Record<number, number> = {}
+        const progressMap: Record<number, number> = {}
 
         if (courseIds.length > 0) {
             // SQLite requires placeholders for each item in IN clause
@@ -191,7 +191,7 @@ export async function getUserCourses(
                 id: course.id,
                 title: course.title,
                 author: course.author,
-                price: `$${course.price.toFixed(2)}`,
+                price: formatCurrency(course.price, course.currency),
                 rating: course.rating,
                 category: course.category,
                 image: course.image_url,
@@ -267,6 +267,8 @@ export async function getTransactions(
 ) {
     try {
         const user = req.user!
+        const appConfig = await loadAppConfig()
+        const defaultCurrency = appConfig.app.defaultCurrency
         const page = parseInt(req.query.page as string, 10) || 1
         const limit = 20
         const offset = (page - 1) * limit
@@ -291,12 +293,15 @@ export async function getTransactions(
                         courseTitle = meta.title
                     }
                 }
+                const currency = normalizeCurrency(tx.currency, defaultCurrency)
 
                 return {
                     id: tx.id,
                     title: tx.status === 'failed' ? 'Payment Failed' : courseTitle,
                     date: formatDate(tx.created_at),
-                    amount: tx.status === 'failed' ? '$0.00' : formatPrice(tx.amount),
+                    amount: tx.status === 'failed'
+                        ? formatCurrency(0, currency)
+                        : formatSignedCurrency(tx.amount, currency),
                     status: tx.status === 'success' ? 'success' : 'failed',
                     type: tx.status === 'failed' ? 'error' : tx.type
                 }

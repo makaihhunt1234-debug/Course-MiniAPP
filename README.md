@@ -1,10 +1,10 @@
-# CourseGlobal
+# Course MiniApp
 
-Telegram MiniApp platform for selling and delivering online courses. Features PayPal and Telegram Stars payments, Cloudflare Stream video support, and a fully customizable admin dashboard.
+Course platform built for Telegram MiniApps and standalone web delivery. Use it for coaches, bootcamps, corporate training, paid communities, or internal academies. Accept PayPal or Telegram Stars, stream via Cloudflare, run quizzes, and manage everything from a customizable admin panel. Start in demo mode for local development, then connect a real bot for production.
 
 ## Live Demo
 
-**[https://democourse.cookiewhite.beer](https://democourse.cookiewhite.beer)** — Try the full platform in demo mode
+**[democourse.cookiewhite.beer](https://democourse.cookiewhite.beer)** Try the full platform in demo mode
 
 ## Features
 

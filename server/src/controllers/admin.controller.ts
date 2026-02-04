@@ -5,6 +5,8 @@ import { createError } from '../middleware/error.middleware.js'
 import { loadCourseMetadata, loadCourseFromFilesystem } from '../services/filesystem-loader.js'
 import type { Transaction, User } from '../types/models.js'
 import { loadAppConfig } from '../config/app-config.js'
+import { formatCurrency, formatSignedCurrency, normalizeCurrency } from '../utils/currency.js'
+import { getLocale } from '../utils/locale.js'
 
 const RANGE_WINDOWS: Record<string, string | null> = {
     '24h': '-1 day',
@@ -12,13 +14,8 @@ const RANGE_WINDOWS: Record<string, string | null> = {
     'all': null
 }
 
-function formatPrice(amount: number, isNegative = true): string {
-    const formatted = `$${Math.abs(amount).toFixed(2)}`
-    return isNegative ? `-${formatted}` : formatted
-}
-
 function formatDate(date: Date): string {
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat(getLocale(), {
         month: 'short',
         day: 'numeric',
         year: 'numeric'
@@ -704,6 +701,8 @@ export async function getUserOverview(
         if (!Number.isFinite(userId)) {
             throw createError('Invalid user id', 400)
         }
+        const appConfig = await loadAppConfig()
+        const defaultCurrency = appConfig.app.defaultCurrency
 
         const users = await query<User[]>(
             'SELECT id, telegram_id, username, first_name, last_name, photo_url FROM users WHERE id = ?',
@@ -723,7 +722,7 @@ export async function getUserOverview(
         )
 
         const courseIds = userCourses.map(c => c.course_id)
-        let progressMap: Record<number, number> = {}
+        const progressMap: Record<number, number> = {}
 
         if (courseIds.length > 0) {
             const placeholders = courseIds.map(() => '?').join(',')
@@ -751,7 +750,9 @@ export async function getUserOverview(
                     id: course.course_id,
                     title: meta?.title || `Course ${course.course_id}`,
                     author: meta?.author || 'Unknown',
-                    price: `$${(meta?.price || 0).toFixed(2)}`,
+                    price: meta
+                        ? formatCurrency(meta.price, meta.currency)
+                        : formatCurrency(0, defaultCurrency),
                     category: meta?.category || 'Course',
                     image: meta?.imageUrl || 'https://i.imgur.com/zOlPMhT.png',
                     lessonsCount: total,
@@ -777,11 +778,14 @@ export async function getUserOverview(
                     const meta = await loadCourseMetadata(tx.course_id)
                     if (meta) courseTitle = meta.title
                 }
+                const currency = normalizeCurrency(tx.currency, defaultCurrency)
                 return {
                     id: tx.id,
                     title: tx.status === 'failed' ? 'Payment Failed' : courseTitle,
                     date: formatDate(tx.created_at),
-                    amount: tx.status === 'failed' ? '$0.00' : formatPrice(tx.amount),
+                    amount: tx.status === 'failed'
+                        ? formatCurrency(0, currency)
+                        : formatSignedCurrency(tx.amount, currency),
                     status: tx.status === 'success' ? 'success' : 'failed',
                     type: tx.status === 'failed' ? 'error' : tx.type
                 }

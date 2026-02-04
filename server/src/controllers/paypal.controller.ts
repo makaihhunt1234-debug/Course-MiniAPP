@@ -7,6 +7,8 @@ import * as paypalService from '../services/paypal.service.js'
 import { sendPurchaseConfirmationNotification, sendPurchaseProcessingNotification } from '../services/telegram-notifications.service.js'
 import { logger } from '../utils/logger.js'
 import { COURSES_DIR, loadCourseMetadata } from '../services/filesystem-loader.js'
+import { loadAppConfig } from '../config/app-config.js'
+import { normalizeCurrency } from '../utils/currency.js'
 import { stat } from 'fs/promises'
 import path from 'path'
 /**
@@ -34,6 +36,13 @@ interface PayPalWebhookEvent {
             }
         }
     }
+}
+
+async function resolvePaypalCurrency(courseCurrency?: string): Promise<string> {
+    const appConfig = await loadAppConfig()
+    const defaultCurrency = appConfig.app.defaultCurrency
+    const paypalCurrency = normalizeCurrency(appConfig.payments?.paypal?.currency, defaultCurrency)
+    return normalizeCurrency(courseCurrency, paypalCurrency)
 }
 
 /**
@@ -210,10 +219,12 @@ async function handlePaymentCaptureCompleted(event: PayPalWebhookEvent) {
         return
     }
 
+    const courseCurrency = await resolvePaypalCurrency(meta.currency)
     const course = {
         id: courseId,
         title: meta.title,
-        price: meta.price || 8.00
+        price: meta.price,
+        currency: courseCurrency
     }
 
     // Check if already granted access
@@ -234,7 +245,7 @@ async function handlePaymentCaptureCompleted(event: PayPalWebhookEvent) {
     )
 
     const paymentAmount = event.resource.amount?.value || course.price
-    const paymentCurrency = event.resource.amount?.currency_code || 'USD'
+    const paymentCurrency = normalizeCurrency(event.resource.amount?.currency_code, course.currency)
     let notificationMessageId: number | null = null
     let updatedTransaction = false
 
@@ -311,6 +322,8 @@ async function handlePaymentCaptureDenied(event: PayPalWebhookEvent) {
 
     const userId = parseInt(match[1], 10)
     const courseId = parseInt(match[2], 10)
+    const fallbackCurrency = await resolvePaypalCurrency()
+    const currency = normalizeCurrency(event.resource.amount?.currency_code, fallbackCurrency)
 
     // Record failed transaction
     await query(
@@ -322,7 +335,7 @@ async function handlePaymentCaptureDenied(event: PayPalWebhookEvent) {
             courseId,
             captureId,
             event.resource.amount?.value || 0,
-            event.resource.amount?.currency_code || 'USD',
+            currency,
             'failed',
             'purchase'
         ]
@@ -348,6 +361,8 @@ async function handlePaymentCaptureRefunded(event: PayPalWebhookEvent) {
 
     const userId = parseInt(match[1], 10)
     const courseId = parseInt(match[2], 10)
+    const fallbackCurrency = await resolvePaypalCurrency()
+    const currency = normalizeCurrency(event.resource.amount?.currency_code, fallbackCurrency)
 
     // Revoke access
     await query(
@@ -365,7 +380,7 @@ async function handlePaymentCaptureRefunded(event: PayPalWebhookEvent) {
             courseId,
             captureId,
             event.resource.amount?.value || 0,
-            event.resource.amount?.currency_code || 'USD',
+            currency,
             'refunded',
             'refund'
         ]
@@ -408,10 +423,12 @@ export async function createPurchaseOrder(
             throw createError('Course not found', 404)
         }
 
+        const currency = await resolvePaypalCurrency(meta.currency)
         const course = {
             id: courseId,
             title: meta.title,
-            price: meta.price || 8.00
+            price: meta.price,
+            currency
         }
 
         // Check if already purchased
@@ -429,7 +446,7 @@ export async function createPurchaseOrder(
 
         const order = await paypalService.createOrder({
             amount: course.price.toFixed(2),
-            currency: 'USD',
+            currency: course.currency,
             description: course.title,
             custom_id: customId,
             return_url: `${config.frontendUrl}/purchase/success`,

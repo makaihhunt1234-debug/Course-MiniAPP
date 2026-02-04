@@ -4,6 +4,12 @@ import path from 'path'
 import YAML from 'yaml'
 import { z } from 'zod'
 
+const AppSchema = z.object({
+    name: z.string().optional(),
+    description: z.string().optional(),
+    defaultCurrency: z.string().min(1)
+}).passthrough()
+
 const AuthorSchema = z.object({
     id: z.string().min(1),
     name: z.string(),
@@ -32,7 +38,7 @@ const CourseSchema = z.object({
     description: z.string().optional(),
     category: z.string().optional(),
     imageUrl: z.string().optional(),
-    price: z.number().optional(),
+    price: z.number().nonnegative(),
     starsPrice: z.number().optional(),
     duration: z.string().optional(),
     program: z.array(z.string()).optional(),
@@ -40,10 +46,20 @@ const CourseSchema = z.object({
     visibility: z.enum(['public', 'hidden']).optional()
 }).passthrough()
 
+const PaymentsSchema = z.object({
+    paypal: z.object({
+        enabled: z.boolean().optional(),
+        currency: z.string().min(1).optional()
+    }).optional(),
+    telegramStars: z.object({
+        enabled: z.boolean().optional()
+    }).optional()
+}).passthrough()
+
 const AppConfigSchema = z.object({
-    app: z.record(z.any()).optional(),
+    app: AppSchema,
     features: z.record(z.any()).optional(),
-    payments: z.record(z.any()).optional(),
+    payments: PaymentsSchema.optional(),
     demo: z.record(z.any()).optional(),
     ui: UiSchema.optional(),
     authors: z.array(AuthorSchema).default([]),
@@ -54,11 +70,6 @@ export type AppConfig = z.infer<typeof AppConfigSchema>
 export type UiConfig = z.infer<typeof UiSchema>
 export type AuthorConfig = z.infer<typeof AuthorSchema>
 export type CourseConfig = z.infer<typeof CourseSchema>
-
-const defaultConfig: AppConfig = {
-    authors: [],
-    courses: []
-}
 
 function resolveConfigPath(): string {
     if (process.env.CONFIG_PATH) {
@@ -91,12 +102,9 @@ export async function loadAppConfig(): Promise<AppConfig> {
         const raw = await fs.readFile(configPath, 'utf-8')
         const parsed = YAML.parse(raw) || {}
         const result = AppConfigSchema.safeParse(parsed)
-
         if (!result.success) {
             console.error('[config] Invalid config.yaml', result.error.format())
-            cachedConfig = defaultConfig
-            cachedPath = configPath
-            return cachedConfig
+            throw new Error('Invalid config.yaml')
         }
 
         cachedConfig = result.data
@@ -104,9 +112,7 @@ export async function loadAppConfig(): Promise<AppConfig> {
         return cachedConfig
     } catch (error) {
         console.warn('[config] Failed to load config.yaml', error)
-        cachedConfig = defaultConfig
-        cachedPath = configPath
-        return cachedConfig
+        throw error instanceof Error ? error : new Error('Failed to load config.yaml')
     }
 }
 

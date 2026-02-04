@@ -2,7 +2,8 @@ import fs from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
 import { CloudflareStreamService } from './cloudflare-stream.service.js'
-import { getAuthorConfig, getCourseConfig } from '../config/app-config.js'
+import { getAuthorConfig, getCourseConfig, loadAppConfig } from '../config/app-config.js'
+import { normalizeCurrency } from '../utils/currency.js'
 
 function resolveCoursesDir(): string {
     if (process.env.COURSES_DIR) {
@@ -329,23 +330,23 @@ export async function loadCourseMetadata(courseId: number): Promise<{
     description?: string
     category?: string
     imageUrl?: string
-    price?: number
+    price: number
     starsPrice?: number
     duration?: string
     program?: string[]
-    currency?: string
+    currency: string
 } | null> {
+    const appConfig = await loadAppConfig()
+    const defaultCurrency = appConfig.app.defaultCurrency
     const config = await getCourseConfig(courseId)
     if (!config) {
-        return {
-            title: `Course ${courseId}`,
-            author: 'Unknown'
-        }
+        return null
     }
 
     const authorConfig = config.authorId ? await getAuthorConfig(config.authorId) : null
     const authorName = authorConfig?.name ?? config.author ?? 'Unknown'
     const authorAvatar = authorConfig?.avatarUrl
+    const currency = normalizeCurrency(config.currency, defaultCurrency)
 
     return {
         title: config.title,
@@ -358,7 +359,7 @@ export async function loadCourseMetadata(courseId: number): Promise<{
         starsPrice: config.starsPrice,
         duration: config.duration,
         program: config.program,
-        currency: config.currency
+        currency
     }
 }
 

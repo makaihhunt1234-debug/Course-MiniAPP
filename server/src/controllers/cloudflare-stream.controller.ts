@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import { cloudflareStreamService, CloudflareStreamService } from '../services/cloudflare-stream.service.js'
 import { query } from '../config/database.js'
 import { logger } from '../utils/logger.js'
+import { loadCourseFromFilesystem } from '../services/filesystem-loader.js'
 
 /**
  * Cloudflare Stream Controller
@@ -70,6 +71,18 @@ export const generateSignedUrl = async (req: Request, res: Response) => {
             return res.status(403).json({
                 success: false,
                 error: 'Course not purchased'
+            })
+        }
+
+        const lessons = await loadCourseFromFilesystem(parsedCourseId)
+        const marker = `{{CLOUDFLARE_STREAM:${extractedId}}}`
+        const hasVideo = lessons.some(lesson => lesson.content?.includes(marker))
+
+        if (!hasVideo) {
+            logger.warn('StreamSignedUrlMissingVideo', `course ${parsedCourseId} does not include video ${extractedId}`)
+            return res.status(404).json({
+                success: false,
+                error: 'Video not found for course'
             })
         }
 

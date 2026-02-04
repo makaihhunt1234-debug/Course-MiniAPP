@@ -5,6 +5,8 @@ import { config } from '../config/env.js'
 import { createError } from '../middleware/error.middleware.js'
 import { COURSES_DIR, loadCourseFromFilesystem, loadCourseMetadata, courseExistsInFilesystem } from '../services/filesystem-loader.js'
 import { loadAppConfig } from '../config/app-config.js'
+import { formatCurrency } from '../utils/currency.js'
+import { getLocale } from '../utils/locale.js'
 import { stat } from 'fs/promises'
 import path from 'path'
 import type {
@@ -17,7 +19,7 @@ import type {
 } from '../types/models.js'
 
 function formatDate(date: Date): string {
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat(getLocale(), {
         month: 'short',
         day: 'numeric',
         year: 'numeric'
@@ -26,13 +28,18 @@ function formatDate(date: Date): string {
 
 function formatRelativeDate(date: Date): string {
     const now = new Date()
-    const diff = now.getTime() - new Date(date).getTime()
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+    const diffMs = new Date(date).getTime() - now.getTime()
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24))
+    const rtf = new Intl.RelativeTimeFormat(getLocale(), { numeric: 'auto' })
 
-    if (days === 0) return 'Today'
-    if (days === 1) return 'Yesterday'
-    if (days < 7) return `${days} days ago`
-    if (days < 30) return `${Math.floor(days / 7)} weeks ago`
+    if (Math.abs(diffDays) < 7) {
+        return rtf.format(diffDays, 'day')
+    }
+
+    if (Math.abs(diffDays) < 30) {
+        return rtf.format(Math.round(diffDays / 7), 'week')
+    }
+
     return formatDate(date)
 }
 
@@ -102,14 +109,12 @@ export async function getFeaturedCourses(
                     ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
                     : 5.0
 
-                const price = meta.price || 8.00
-
                 courses.push({
                     id: courseId,
                     title: meta.title,
                     author: meta.author,
                     authorAvatar: meta.authorAvatar,
-                    price: `$${price.toFixed(2)}`,
+                    price: formatCurrency(meta.price, meta.currency),
                     starsPrice: meta.starsPrice,
                     rating: Math.round(avgRating * 10) / 10,
                     category: meta.category || 'General',
@@ -228,14 +233,12 @@ export async function getCourseById(
             ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
             : 5.0
 
-        const price = meta.price || 8.00
-
         const result: CourseDetailResponse = {
             id: courseId,
             title: meta.title,
             author: meta.author,
             authorAvatar: meta.authorAvatar,
-            price: `$${price.toFixed(2)}`,
+            price: formatCurrency(meta.price, meta.currency),
             starsPrice: meta.starsPrice,
             rating: Math.round(avgRating * 10) / 10,
             category: meta.category || 'General',
