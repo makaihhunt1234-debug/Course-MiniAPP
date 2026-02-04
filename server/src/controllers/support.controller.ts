@@ -3,6 +3,7 @@ import { query, insert } from '../config/database.js'
 import { createError } from '../middleware/error.middleware.js'
 import { notifyNewSupportMessage } from '../services/support-notifications.service.js'
 import { config } from '../config/env.js'
+import { isDemoRequest } from '../utils/demo.js'
 
 type SenderType = 'user' | 'admin'
 
@@ -56,11 +57,6 @@ interface SupportUserRow {
     last_purchase_at?: string | null
     created_at?: string | null
     has_started?: number | null
-}
-
-function isDemoRequest(req: Request): boolean {
-    const hasDemoHeader = !!req.headers['x-demo-user']
-    return config.demoMode || (config.nodeEnv !== 'production' && hasDemoHeader)
 }
 
 function shouldIncludeDemo(req: Request): boolean {

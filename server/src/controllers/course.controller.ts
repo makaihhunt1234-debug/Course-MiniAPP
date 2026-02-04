@@ -1,12 +1,12 @@
 import type { Request, Response, NextFunction } from 'express'
 import { query } from '../config/database.js'
 import { cache, CACHE_KEYS } from '../config/redis.js'
-import { config } from '../config/env.js'
 import { createError } from '../middleware/error.middleware.js'
 import { COURSES_DIR, loadCourseFromFilesystem, loadCourseMetadata, courseExistsInFilesystem } from '../services/filesystem-loader.js'
 import { loadAppConfig } from '../config/app-config.js'
 import { formatCurrency } from '../utils/currency.js'
 import { formatDate, formatRelativeDate } from '../utils/date.js'
+import { isDemoRequest } from '../utils/demo.js'
 import { stat } from 'fs/promises'
 import path from 'path'
 import type {
@@ -33,11 +33,6 @@ async function attachMyReactions(reviews: ReviewResponse[], userId: number): Pro
         ...review,
         myReaction: reactionMap.get(review.id) ?? 0
     }))
-}
-
-function isDemoRequest(req: Request): boolean {
-    const hasDemoHeader = !!req.headers['x-demo-user']
-    return config.demoMode || (config.nodeEnv !== 'production' && hasDemoHeader)
 }
 
 /**
