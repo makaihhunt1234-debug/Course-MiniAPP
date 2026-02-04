@@ -3,7 +3,7 @@ import { query } from '../config/database.js'
 import { cache, CACHE_KEYS } from '../config/redis.js'
 import { createError } from '../middleware/error.middleware.js'
 import { z } from 'zod'
-import { getLocale } from '../utils/locale.js'
+import { formatDate, formatRelativeDate } from '../utils/date.js'
 
 const reviewSchema = z.object({
     courseId: z.number().int().positive(),
@@ -18,31 +18,6 @@ const replySchema = z.object({
 const reactionSchema = z.object({
     value: z.number().int().min(-1).max(1)
 })
-
-function formatDate(date: Date): string {
-    return new Intl.DateTimeFormat(getLocale(), {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-    }).format(new Date(date))
-}
-
-function formatRelativeDate(date: Date): string {
-    const now = new Date()
-    const diffMs = new Date(date).getTime() - now.getTime()
-    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24))
-    const rtf = new Intl.RelativeTimeFormat(getLocale(), { numeric: 'auto' })
-
-    if (Math.abs(diffDays) < 7) {
-        return rtf.format(diffDays, 'day')
-    }
-
-    if (Math.abs(diffDays) < 30) {
-        return rtf.format(Math.round(diffDays / 7), 'week')
-    }
-
-    return formatDate(date)
-}
 
 function mapReview(row: any) {
     return {

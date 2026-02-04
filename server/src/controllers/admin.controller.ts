@@ -6,20 +6,12 @@ import { loadCourseMetadata, loadCourseFromFilesystem } from '../services/filesy
 import type { Transaction, User } from '../types/models.js'
 import { loadAppConfig } from '../config/app-config.js'
 import { formatCurrency, formatSignedCurrency, normalizeCurrency } from '../utils/currency.js'
-import { getLocale } from '../utils/locale.js'
+import { formatDate } from '../utils/date.js'
 
 const RANGE_WINDOWS: Record<string, string | null> = {
     '24h': '-1 day',
     '7d': '-7 days',
     'all': null
-}
-
-function formatDate(date: Date): string {
-    return new Intl.DateTimeFormat(getLocale(), {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-    }).format(new Date(date))
 }
 
 function parsePagination(req: Request) {

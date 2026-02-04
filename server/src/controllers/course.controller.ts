@@ -6,7 +6,7 @@ import { createError } from '../middleware/error.middleware.js'
 import { COURSES_DIR, loadCourseFromFilesystem, loadCourseMetadata, courseExistsInFilesystem } from '../services/filesystem-loader.js'
 import { loadAppConfig } from '../config/app-config.js'
 import { formatCurrency } from '../utils/currency.js'
-import { getLocale } from '../utils/locale.js'
+import { formatDate, formatRelativeDate } from '../utils/date.js'
 import { stat } from 'fs/promises'
 import path from 'path'
 import type {
@@ -17,31 +17,6 @@ import type {
     ReviewResponse,
     QuizDataResponse
 } from '../types/models.js'
-
-function formatDate(date: Date): string {
-    return new Intl.DateTimeFormat(getLocale(), {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-    }).format(new Date(date))
-}
-
-function formatRelativeDate(date: Date): string {
-    const now = new Date()
-    const diffMs = new Date(date).getTime() - now.getTime()
-    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24))
-    const rtf = new Intl.RelativeTimeFormat(getLocale(), { numeric: 'auto' })
-
-    if (Math.abs(diffDays) < 7) {
-        return rtf.format(diffDays, 'day')
-    }
-
-    if (Math.abs(diffDays) < 30) {
-        return rtf.format(Math.round(diffDays / 7), 'week')
-    }
-
-    return formatDate(date)
-}
 
 async function attachMyReactions(reviews: ReviewResponse[], userId: number): Promise<ReviewResponse[]> {
     if (!reviews.length) return reviews

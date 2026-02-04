@@ -10,15 +10,7 @@ import type {
     TransactionResponse
 } from '../types/models.js'
 import { formatCurrency, formatSignedCurrency, normalizeCurrency } from '../utils/currency.js'
-import { getLocale } from '../utils/locale.js'
-
-function formatDate(date: Date): string {
-    return new Intl.DateTimeFormat(getLocale(), {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-    }).format(new Date(date))
-}
+import { formatDate } from '../utils/date.js'
 
 /**
  * GET /api/user/profile
