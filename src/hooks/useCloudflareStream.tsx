@@ -11,7 +11,7 @@ import { CloudflareStreamPlayer } from '@/components/feature/CloudflareStreamPla
  * const contentRef = useCloudflareStream(htmlContent)
  * <div ref={contentRef} dangerouslySetInnerHTML={{ __html: htmlContent }} />
  */
-export function useCloudflareStream(htmlContent: string) {
+export function useCloudflareStream(htmlContent: string, courseId: number) {
     const containerRef = useRef<HTMLDivElement>(null)
     const rootsRef = useRef<Map<HTMLElement, Root>>(new Map())
 
@@ -47,6 +47,7 @@ export function useCloudflareStream(htmlContent: string) {
                         controls={true}
                         autoplay={false}
                         fill={isVideoOnly}
+                        courseId={courseId}
                     />
                 )
 
@@ -67,7 +68,7 @@ export function useCloudflareStream(htmlContent: string) {
             })
             rootsRef.current.clear()
         }
-    }, [htmlContent])
+    }, [htmlContent, courseId])
 
     return containerRef
 }

@@ -21,10 +21,12 @@ import { useI18n } from "@/lib/i18n"
 function LessonContent({
     content,
     highlightTerm,
-    isVideoOnly = false
+    isVideoOnly = false,
+    courseId
 }: {
     content: string
     highlightTerm: string
+    courseId: number
     isVideoOnly?: boolean
 }) {
     const parsedHtml = highlightTerm
@@ -34,7 +36,7 @@ function LessonContent({
         )
         : parseMarkdown(content)
 
-    const contentRef = useCloudflareStream(parsedHtml)
+    const contentRef = useCloudflareStream(parsedHtml, courseId)
 
     return (
         <div
@@ -544,6 +546,7 @@ export function LessonPage() {
                                         autoplay={false}
                                         fill={true}
                                         bottomInset={VIDEO_UI_BOTTOM_INSET}
+                                        courseId={courseId}
                                     />
                                 </div>
                             )}
@@ -552,6 +555,7 @@ export function LessonPage() {
                                 <LessonContent
                                     content={contentToRender}
                                     highlightTerm={highlightTerm}
+                                    courseId={courseId}
                                 />
                             )}
 

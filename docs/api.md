@@ -214,6 +214,8 @@ Body:
 }
 ```
 
+- The server requires `courseId` so it can verify that the authenticated user has bought that course before issuing the signed token.
+
 ### GET /stream/metadata/:videoId
 Get video metadata.
 

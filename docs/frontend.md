@@ -213,7 +213,7 @@ Theme colors defined in `tailwind.config.js`:
 ## Key Components
 
 ### CloudflareStreamPlayer
-HLS video player for Cloudflare Stream videos.
+HLS video player for Cloudflare Stream videos that requests a signed URL from `/api/stream/sign-url`. It must receive the current `courseId` so the server can confirm the user purchased the course before granting the token.
 
 ### Quiz
 Interactive quiz with single/multiple choice questions.

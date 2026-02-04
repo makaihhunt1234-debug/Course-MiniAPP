@@ -33,6 +33,7 @@ interface CloudflareStreamPlayerProps {
     onEnded?: () => void
     onError?: (_error: Error) => void
     onTimeUpdate?: (_currentTime: number, _duration: number) => void
+    courseId: number
 }
 
 export function CloudflareStreamPlayer({
@@ -49,7 +50,8 @@ export function CloudflareStreamPlayer({
     onPause,
     onEnded,
     onError,
-    onTimeUpdate
+    onTimeUpdate,
+    courseId
 }: CloudflareStreamPlayerProps) {
     const iframeRef = useRef<HTMLIFrameElement>(null)
     const [streamUrl, setStreamUrl] = useState<string | null>(null)
@@ -79,7 +81,7 @@ export function CloudflareStreamPlayer({
             setLoading(true)
             setError(null)
 
-            const response = await api.getStreamSignedUrl(videoId)
+            const response = await api.getStreamSignedUrl(videoId, courseId)
 
             // Use embed URL for iframe integration
             setStreamUrl(response.embedUrl)
@@ -114,7 +116,7 @@ export function CloudflareStreamPlayer({
      */
     useEffect(() => {
         fetchSignedUrl()
-    }, [videoId, retryCount, t])
+    }, [videoId, courseId, retryCount, t])
 
     /**
      * Setup Cloudflare Stream Player API messaging

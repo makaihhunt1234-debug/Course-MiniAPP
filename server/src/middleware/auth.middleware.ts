@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import type { Request, Response, NextFunction } from 'express'
 import { validate } from '@telegram-apps/init-data-node'
 import { config } from '../config/env.js'
@@ -15,6 +16,7 @@ declare global {
         interface Request {
             user?: User
             telegramId?: number
+            userId?: number
         }
     }
 }
@@ -71,6 +73,39 @@ async function getOrCreateDemoUser(req: Request): Promise<User> {
     return user
 }
 
+const initDataReplayStore = new Map<string, number>()
+const INIT_DATA_MIN_TTL = 60
+const INIT_DATA_MAX_TTL = 3600
+
+function cleanupInitDataReplayStore() {
+    const now = Date.now()
+    for (const [hash, expiresAt] of initDataReplayStore.entries()) {
+        if (expiresAt <= now) {
+            initDataReplayStore.delete(hash)
+        }
+    }
+}
+
+function isInitDataReplay(hash: string): boolean {
+    cleanupInitDataReplayStore()
+    return initDataReplayStore.has(hash)
+}
+
+function markInitDataAsUsed(hash: string, ttl: number) {
+    cleanupInitDataReplayStore()
+    const expiresAt = Date.now() + ttl * 1000
+    initDataReplayStore.set(hash, expiresAt)
+}
+
+function normalizeInitDataTtl(value: number | undefined): number {
+    const ttl = Number.isFinite(value) ? value : config.telegram.initDataMaxAgeSeconds
+    return Math.max(INIT_DATA_MIN_TTL, Math.min(ttl, INIT_DATA_MAX_TTL))
+}
+
+function hashInitData(value: string): string {
+    return crypto.createHash('sha256').update(value).digest('hex')
+}
+
 
 /**
  * Authentication middleware
@@ -85,6 +120,7 @@ export async function authMiddleware(
     next: NextFunction
 ) {
     const correlationId = `req-${Date.now()}-${Math.random().toString(36).substring(7)}`
+    const initDataTtl = normalizeInitDataTtl(config.telegram.initDataMaxAgeSeconds)
 
     try {
         // Demo mode: only when explicitly enabled in config
@@ -93,6 +129,7 @@ export async function authMiddleware(
             const user = await getOrCreateDemoUser(req)
             req.user = user
             req.telegramId = user.telegram_id
+            req.userId = user.id
             return next()
         }
 
@@ -113,7 +150,7 @@ export async function authMiddleware(
         // Use official Telegram validation package
         try {
             validate(initData, config.telegram.botToken, {
-                expiresIn: 86400 // 24 hours
+                expiresIn: initDataTtl
             })
             logger.debug('OfficialValidationPassed', `Telegram SDK validation successful for ${req.path}, correlation_id ${correlationId}`)
         } catch (err) {
@@ -132,6 +169,15 @@ export async function authMiddleware(
         logger.debug('AuthSuccessful', `Authentication successful for telegram_id ${telegramUser.id}, path ${req.path}, correlation_id ${correlationId}`)
 
         req.telegramId = telegramUser.id
+
+        const initDataHash = hashInitData(initData)
+        const replayKey = CACHE_KEYS.INIT_DATA(initDataHash)
+        const seenInCache = await cache.get<boolean>(replayKey)
+        if (seenInCache || isInitDataReplay(initDataHash)) {
+            throw createError('Telegram authorization replay detected', 401)
+        }
+        markInitDataAsUsed(initDataHash, initDataTtl)
+        await cache.set(replayKey, true, initDataTtl)
 
         // Get or create user
         let user = await cache.get<User>(CACHE_KEYS.USER(telegramUser.id))
@@ -188,6 +234,7 @@ export async function authMiddleware(
         }
 
         req.user = user
+        req.userId = user?.id
         next()
     } catch (error) {
         next(error)
@@ -214,6 +261,7 @@ export async function optionalAuthMiddleware(
     if (error) {
         req.user = undefined
         req.telegramId = undefined
+        req.userId = undefined
     }
     next()
 }

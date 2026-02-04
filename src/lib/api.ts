@@ -940,10 +940,10 @@ export interface CloudflareStreamSignedUrl {
  * Generate signed URL for Cloudflare Stream video
  * Required for secure video playback
  */
-export async function getStreamSignedUrl(videoId: string, userId?: string): Promise<CloudflareStreamSignedUrl> {
+export async function getStreamSignedUrl(videoId: string, courseId: number): Promise<CloudflareStreamSignedUrl> {
     return apiRequest<CloudflareStreamSignedUrl>('/stream/sign-url', {
         method: 'POST',
-        body: JSON.stringify({ videoId, userId })
+        body: JSON.stringify({ videoId, courseId })
     })
 }
 

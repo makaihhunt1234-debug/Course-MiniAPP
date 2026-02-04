@@ -138,5 +138,6 @@ export const CACHE_KEYS = {
     COURSE: (id: number) => `courses:${id}`,
     COURSE_LESSONS: (id: number) => `courses:${id}:lessons`,
     USER: (telegramId: number) => `user:${telegramId}`,
-    USER_COURSES: (userId: number) => `user:${userId}:courses`
+    USER_COURSES: (userId: number) => `user:${userId}:courses`,
+    INIT_DATA: (hash: string) => `telegram:init-data:${hash}`
 }

@@ -65,6 +65,15 @@ function loadConfigEnv(): Record<string, string> {
         const telegram = envConfig.telegram || {}
         setEnv('TELEGRAM_BOT_TOKEN', telegram.botToken ?? telegram.BOT_TOKEN)
         setEnv('TELEGRAM_WEBHOOK_URL', telegram.webhookUrl ?? telegram.WEBHOOK_URL)
+        setEnv(
+            'TELEGRAM_INIT_DATA_TTL',
+            telegram.initDataTtl
+                ?? telegram.initDataMaxAge
+                ?? telegram.initDataExpiration
+                ?? telegram.INIT_DATA_TTL
+                ?? telegram.INIT_DATA_MAX_AGE
+                ?? telegram.INIT_DATA_EXPIRATION
+        )
         if (Array.isArray(telegram.adminIds)) {
             setEnv('ADMIN_TELEGRAM_IDS', telegram.adminIds.join(','))
         } else {
@@ -110,6 +119,7 @@ const envSchema = z.object({
     // Telegram
     TELEGRAM_BOT_TOKEN: z.string().optional(),
     TELEGRAM_WEBHOOK_URL: z.string().optional(),
+    TELEGRAM_INIT_DATA_TTL: z.coerce.number().int().positive().default(300),
     ADMIN_TELEGRAM_IDS: z.string().optional(),
 
     // PayPal
@@ -153,7 +163,8 @@ export const config = {
 
     telegram: {
         botToken: env.TELEGRAM_BOT_TOKEN,
-        webhookUrl: env.TELEGRAM_WEBHOOK_URL
+        webhookUrl: env.TELEGRAM_WEBHOOK_URL,
+        initDataMaxAgeSeconds: env.TELEGRAM_INIT_DATA_TTL
     },
     adminTelegramIds: env.ADMIN_TELEGRAM_IDS
         ? env.ADMIN_TELEGRAM_IDS.split(',')

@@ -27,6 +27,7 @@ env:
     botToken: string
     webhookUrl: string
     adminIds: number[]
+    initDataTtl: number
 
   paypal:
     clientId: string
@@ -47,6 +48,8 @@ features:
   demoMode: boolean
   telegramAuth: boolean
   supportChat: boolean
+
+`env.telegram.initDataTtl` defines how many seconds a Telegram `initData` payload remains valid before the server rejects it. A shorter TTL (default 300s) reduces the replay window for intercepted credentials.
 
 payments:
   paypal:
@@ -124,6 +127,7 @@ REDIS_PASSWORD=secret
 TELEGRAM_BOT_TOKEN=...
 TELEGRAM_WEBHOOK_URL=https://example.com/api/telegram/webhook
 ADMIN_TELEGRAM_IDS=123456789,987654321
+TELEGRAM_INIT_DATA_TTL=300
 
 PAYPAL_CLIENT_ID=...
 PAYPAL_SECRET=...

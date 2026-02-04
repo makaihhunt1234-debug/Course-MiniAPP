@@ -141,15 +141,17 @@ POST /api/video/report-piracy     - Report piracy
 
 ## Security
 
+- Telegram `initData` headers are accepted only for `env.telegram.initDataTtl` seconds (default 300s) and automatically rejected if reused.
 - Videos should have `requireSignedURLs: true` in Cloudflare Stream settings
 - All video access is logged with user ID, IP, user agent
 - Signed URLs expire (1 hour for Stream, 5 min for legacy)
-- Purchase verification before generating URLs
+- Stream signed URLs now require the active `courseId` so the backend can verify the authenticated user purchased that course before returning a token.
 
 ## Frontend Player
 
 Frontend uses `CloudflareStreamPlayer` component which:
 - Detects `{{CLOUDFLARE_STREAM:videoId}}` markers
 - Requests signed URL from server
+- Supplies the current `courseId` so the backend can enforce purchase checks
 - Uses HLS.js for playback
 - Shows loading/error states

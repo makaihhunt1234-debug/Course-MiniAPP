@@ -1,5 +1,7 @@
 import { Request, Response } from 'express'
 import { cloudflareStreamService, CloudflareStreamService } from '../services/cloudflare-stream.service.js'
+import { query } from '../config/database.js'
+import { logger } from '../utils/logger.js'
 
 /**
  * Cloudflare Stream Controller
@@ -16,7 +18,15 @@ import { cloudflareStreamService, CloudflareStreamService } from '../services/cl
  */
 export const generateSignedUrl = async (req: Request, res: Response) => {
     try {
-        const { videoId, userId } = req.body
+        const { videoId } = req.body
+        const rawCourseId = req.body.courseId ?? req.body.course_id
+        const parsedCourseId = typeof rawCourseId === 'string' ? Number(rawCourseId) : rawCourseId
+        if (!Number.isFinite(parsedCourseId) || parsedCourseId <= 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Course ID is required'
+            })
+        }
 
         if (!videoId) {
             return res.status(400).json({
@@ -42,8 +52,28 @@ export const generateSignedUrl = async (req: Request, res: Response) => {
             })
         }
 
-        // Get user ID from authenticated request (set by auth middleware)
-        const authenticatedUserId = (req as any).userId || userId
+        const userId = req.user?.id ?? req.userId ?? req.telegramId
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                error: 'Authentication required'
+            })
+        }
+
+        const purchased = await query<any[]>(
+            'SELECT id FROM user_courses WHERE user_id = ? AND course_id = ?',
+            [userId, parsedCourseId]
+        )
+
+        if (purchased.length === 0) {
+            logger.warn('StreamSignedUrlUnauthorized', `user_id ${userId} tried to request ${extractedId} for course ${parsedCourseId} without access`)
+            return res.status(403).json({
+                success: false,
+                error: 'Course not purchased'
+            })
+        }
+
+        const authenticatedUserId = String(userId)
 
         // Generate signed URL (1 hour expiration)
         const signedUrl = await cloudflareStreamService.generateSignedUrl(extractedId, {
