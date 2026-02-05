@@ -57,6 +57,9 @@ env:
     apiToken: "..."
     signingKey: "..."
     customerSubdomain: "customer-xxx.cloudflarestream.com"
+
+features:
+  hidePublic: false
 ```
 
 ## Start Server
@@ -107,8 +110,9 @@ server {
 2. Set menu button:
    ```
    /setmenubutton
-   Select bot → Web App URL → https://your-domain.com
+   Select bot -> Web App URL -> https://your-domain.com
    ```
+   If `features.hidePublic: true`, use `https://your-domain.com/tg` instead.
 3. Register webhook:
    ```bash
    curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://your-domain.com/api/webhooks/telegram"
@@ -207,3 +211,6 @@ PAYPAL_MODE=live
 
 VIDEO_SIGNING_KEY=...
 ```
+
+If `HIDE_PUBLIC=true`, your Telegram WebApp URL must point to `/tg`
+(otherwise the server drops the connection).
