@@ -1,89 +1,93 @@
 # Course MiniApp
 
-Course platform built for Telegram MiniApps and standalone web delivery. Use it for coaches, bootcamps, corporate training, paid communities, or internal academies. Accept PayPal or Telegram Stars, stream via Cloudflare, run quizzes, and manage everything from a customizable admin panel. Start in demo mode for local development, then connect a real bot for production.
+Telegram-native course platform: sell access, take payments, deliver video + quizzes, and manage everything from an admin panel. Built for **Telegram Mini Apps**, also works as standalone web.
+
+## What it does
+
+- Turn your Telegram audience into paying students
+- Accept payments: **PayPal** or **Telegram Stars**
+- Deliver lessons: video (Cloudflare Stream) + markdown
+- Quizzes to keep students engaged (and measure progress)
+- Admin panel: users, content, basic analytics/support flows
+- Multi-language: `en` / `ru` / `uk`
+
+## Case
+
+You run a Telegram community and want to monetize it:
+1. Upload lessons (markdown + video)
+2. Set a price (PayPal / Stars)
+3. Users pay -> get instant access -> watch -> pass quizzes
+4. You manage everything in admin (users, activity, feedback)
 
 ## Live Demo
 
-**[democourse.cookiewhite.beer](https://democourse.cookiewhite.beer)** Try the full platform in demo mode
+**[democourse.cookiewhite.beer](https://democourse.cookiewhite.beer)** - full platform in demo mode.
+<img src="https://i.imgur.com/wNCdnj1.gif" alt="Course MiniApp UI preview" width="900" />
 
-## Features
+## Reliab1ty
 
-- **Telegram MiniApp** - Native integration with Telegram WebApp API
-- **Two Payment Methods** - PayPal and Telegram Stars
-- **Video Streaming** - Cloudflare Stream with signed URLs
-- **Interactive Quizzes** - Single/multiple choice with remedial content
-- **Admin Dashboard** - User management, analytics, support chat
-- **Localization** - English, Russian, Ukrainian
-- **Demo Mode** - Full functionality without Telegram for development
+Goal: keep prod **predictable** (no "works on my machine").
 
-## Tech Stack
+- `config.yaml` + env are validated with Zod (bad config fails fast)
+- PayPal webhooks: signature verification (when `env.paypal.webhookId` is set) + rate limiting
+- Repeated webhooks won't grant access **2x**
+- `GET /health` for monitoring (uptime, memory, env)
+- Logs for key flows (DB migrations, payments, errors)
+- Signed video tokens; frontend retries signed URL fetch with backoff
+- `botShield` blocks common scanners/bots (less noise on the server)
 
-**Frontend:** React 19, TypeScript, Vite, Tailwind CSS, Framer Motion
+Want more? Enable Redis (caching) and `features.hidePublic` (gate access: only Telegram entry, no public web).
 
-**Backend:** Express.js, TypeScript, SQLite, Redis (optional)
+<details>
+<summary><b>For developers (setup / docs)</b></summary>
 
-**Integrations:** Telegram Bot API, PayPal REST API, Cloudflare Stream
+### Tech Stack
 
-## Quick Start
+- Frontend: React 19, TypeScript, Vite, Tailwind, Framer Motion
+- Backend: Express, TypeScript, SQLite, Redis (optional)
+- Integrations: Telegram Bot API, PayPal REST API, Cloudflare Stream
 
-### Requirements
+### Quick Start
 
-- Node.js >= 20.0.0
-- npm or pnpm
+#### Requirements
 
-### Installation
+- Node.js >= 20
+- npm (or pnpm)
+
+#### Install
 
 ```bash
-# Clone repository
-git clone https://github.com/your-username/course-global.git
-cd course-global
+git clone https://github.com/CookieWhiteBear/Course-MiniAPP.git
+cd Course-MiniAPP
 
-# Install frontend dependencies
 npm install
-
-# Install server dependencies
 cd server
 npm install
 cd ..
 ```
 
-### Development
+#### Dev
 
 ```bash
-# Interactive CLI - select mode with arrow keys
 npm run dev:cli
 ```
 
 Or run directly:
 
 ```bash
-npm run dev:cli demo    # Demo mode (no Telegram required)
-npm run dev:cli dev     # Dev mode (requires Telegram auth)
+npm run dev:cli demo   # demo mode, Telegram not required
+npm run dev:cli dev    # dev mode, Telegram auth required
 ```
 
-This starts both frontend (port 5173) and backend (port 3001) simultaneously.
+This starts both: frontend `5173` and backend `3001`.
 
-Open http://localhost:5173 - demo mode runs without Telegram.
+Open `http://localhost:5173` (demo mode works without Telegram).
 
-### Production Build
+### Configuration
 
-```bash
-# Build frontend
-npm run build
+Main config lives in `config.yaml` (root). You can also use env vars (they take priority).
 
-# Build server
-cd server
-npm run build
-
-# Or use combined build script
-npm run build:deploy
-```
-
-## Configuration
-
-All configuration is in `config.yaml` at project root.
-
-### Minimal Config
+#### Minimal example
 
 ```yaml
 app:
@@ -91,7 +95,6 @@ app:
   defaultCurrency: USD
 
 env:
-  port: 3001
   nodeEnv: production
   demoMode: false
   frontendUrl: https://your-domain.com
@@ -119,42 +122,46 @@ authors:
     name: Your Name
 ```
 
-See [docs/configuration.md](docs/configuration.md) for full reference.
+Full reference: [docs/configuration.md](docs/configuration.md)
 
-## Course Structure
+### Course Content Structure
 
-Courses are stored in the `courses/` directory:
+Courses live in `courses/`:
 
 ```
 courses/
-├── 1/
-│   ├── 1.md      # Lesson 1
-│   ├── 2.md      # Lesson 2
-│   └── 3.md      # Quiz
-├── 2/
-│   └── ...
+|-- 1/
+|   |-- 1.md      # Lesson 1
+|   |-- 2.md      # Lesson 2
+|   `-- 3.md      # Quiz
+`-- 2/
+    `-- ...
 ```
 
-### Lesson Types
+#### Lesson Types
 
-**Text lesson:**
-```markdown
+**Text:**
+
+```md
 # Welcome to the Course
 
-Your content here in **markdown**.
+Your content in **markdown**.
 ```
 
-**Video lesson:**
-```markdown
+**Video:**
+
+```md
 # Video Lesson
 
 <vid:cloudflare-video-id>
 
-Or local: <vid:video.mp4>
+# or local
+<vid:video.mp4>
 ```
 
 **Quiz:**
-```markdown
+
+```md
 <quiz:single>
 
 # What is 2+2?
@@ -166,134 +173,53 @@ Or local: <vid:video.mp4>
 <q:2>
 ```
 
-See [docs/courses.md](docs/courses.md) for full format reference.
+Full format: [docs/courses.md](docs/courses.md)
 
-## Payments
+### Payments (quick)
 
-### PayPal
+- **PayPal:** set `env.paypal.webhookId` + webhook URL `https://your-domain.com/paypal-hook`
+- **Telegram Stars:** enable payments in @BotFather and set `starsPrice` per course
 
-1. Create app at [PayPal Developer](https://developer.paypal.com)
-2. Add webhook URL: `https://your-domain.com/paypal-hook`
-3. Subscribe to events: `PAYMENT.CAPTURE.COMPLETED`, `CHECKOUT.ORDER.APPROVED`
-4. Add credentials to `config.yaml`
+Details: [docs/payments.md](docs/payments.md)
 
-### Telegram Stars
-
-1. Enable payments in @BotFather
-2. Set `starsPrice` for each course in `config.yaml`
-
-## Deployment
-
-### With PM2
+### Deploy
 
 ```bash
-cd server
-npm run build
-pm2 start dist/app.js --name course-app
+npm run build:deploy
 ```
 
-### Nginx
+Healthcheck:
 
-```nginx
-server {
-    listen 443 ssl http2;
-    server_name your-domain.com;
-
-    location / {
-        proxy_pass http://127.0.0.1:3001;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
+```bash
+curl https://your-domain.com/health
 ```
 
-### Telegram Bot Setup
+Guide: [docs/deployment.md](docs/deployment.md)
 
-1. Create bot via @BotFather
-2. Set menu button: `/setmenubutton` → Web App URL
-3. Register webhook:
-   ```bash
-   curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://your-domain.com/api/webhooks/telegram"
-   ```
+### Docs
 
-See [docs/deployment.md](docs/deployment.md) for detailed instructions.
-
-## Project Structure
-
-```
-├── src/                    # Frontend source
-│   ├── components/         # React components
-│   ├── pages/              # Page components
-│   ├── hooks/              # Custom hooks
-│   ├── lib/                # Utilities
-│   └── locales/            # i18n translations
-├── server/                 # Backend source
-│   └── src/
-│       ├── controllers/    # Route handlers
-│       ├── services/       # Business logic
-│       ├── middleware/     # Express middleware
-│       └── config/         # Configuration
-├── courses/                # Course content (markdown)
-├── docs/                   # Documentation
-└── config.yaml             # Main configuration
-```
-
-## Documentation
-
-- [Configuration](docs/configuration.md) - config.yaml reference
-- [Courses](docs/courses.md) - Content format and structure
+- [Configuration](docs/configuration.md) - `config.yaml` reference
+- [Courses](docs/courses.md) - content format
 - [API](docs/api.md) - REST endpoints
-- [Frontend](docs/frontend.md) - React app architecture
+- [Frontend](docs/frontend.md) - UI architecture
 - [Database](docs/database.md) - SQLite schema
-- [Payments](docs/payments.md) - PayPal and Telegram Stars
-- [Video](docs/video.md) - Cloudflare Stream integration
-- [Deployment](docs/deployment.md) - Production setup
+- [Payments](docs/payments.md) - PayPal + Stars
+- [Video](docs/video.md) - Cloudflare Stream
+- [Deployment](docs/deployment.md) - production setup
 
-## Scripts
+### Scripts
 
 ```bash
-# Development (runs both frontend + backend)
-npm run dev:cli       # Interactive mode selector
-npm run dev:cli demo  # Demo mode directly
-npm run dev:cli dev   # Dev mode directly
+npm run dev:cli
+npm run build
+npm run lint
 
-# Frontend only
-npm run dev           # Development server
-npm run demo          # Development with demo mode
-npm run build         # Production build
-npm run lint          # ESLint
-
-# Server only
 cd server
-npm run dev           # Development with hot reload
-npm run build         # Compile TypeScript
-npm start             # Run production build
-
-# Build & Deploy
-npm run build:deploy  # Build frontend + server for production
+npm run dev
+npm test
 ```
 
-## Environment Variables
-
-Alternative to `config.yaml` (takes precedence):
-
-```bash
-NODE_ENV=production
-PORT=3001
-FRONTEND_URL=https://your-domain.com
-DEMO_MODE=false
-
-TELEGRAM_BOT_TOKEN=...
-ADMIN_TELEGRAM_IDS=123456789
-
-PAYPAL_CLIENT_ID=...
-PAYPAL_SECRET=...
-PAYPAL_WEBHOOK_ID=...
-PAYPAL_MODE=live
-```
+</details>
 
 ## License
 
